@@ -4,9 +4,6 @@ from os import system
 import datetime
 import time
 
-#borker_address = "mqtt.eclipse.org" # Just for now
-borker_address = '192.168.1.115' 
-
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
@@ -35,13 +32,15 @@ def on_message(client, userdata, msg):
 
 
 if __name__ == '__main__':
+    broker_address = '192.168.1.115'
     try:
         conn_status = 'disconnected.'
         client = mqtt.Client()
         client.on_connect = on_connect
         client.on_message = on_message
 
-        client.connect(borker_address, 1883, 60)
+        client.connect(broker_address, 1883, 60)
+        marwan
         client.loop_start()
     except KeyboardInterrupt:
         client.disconnect
