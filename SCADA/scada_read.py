@@ -6,8 +6,9 @@ import time
 
 class AGV(object):
     def __init__(self, location=(0.0,0.0,0.0), status=('OFF')):
+        self.battery  = 100
         self.location = location
-        self.status =   status
+        self.status   =   status
 
 def assign_values(msg):
     ID = msg.topic[9]
@@ -17,14 +18,20 @@ def assign_values(msg):
         agv1.location = eval(msg.payload.decode("utf-8"))
     elif ID == '1' and received_top == 'status':
         agv1.status = msg.payload.decode("utf-8")
+    elif ID == '1' and received_top == 'battery':
+        agv1.battery = int(msg.payload.decode("utf-8"))
     elif ID == '2' and received_top == 'location':
         agv2.location = eval(msg.payload.decode("utf-8"))
     elif ID == '2' and received_top == 'status':
         agv2.status = msg.payload.decode("utf-8")
+    elif ID == '2' and received_top == 'battery':
+        agv2.battery = int(msg.payload.decode("utf-8"))   
     if ID == '3' and received_top == 'location':
         agv3.location = eval(msg.payload.decode("utf-8"))
     elif ID == '3' and received_top == 'status':
         agv3.status = msg.payload.decode("utf-8")
+    elif ID == '3' and received_top == 'battery':
+        agv3.battery = int(msg.payload.decode("utf-8"))
 
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, userdata, flags, rc):
@@ -39,7 +46,7 @@ def on_connect(client, userdata, flags, rc):
     print(Style.RESET_ALL)
     # Subscribing in on_connect() means that if we lose the connection and
     # reconnect then subscriptions will be renewed.
-    client.subscribe([('AGVs/+/location', 0), ('AGVs/+/status', 0)])
+    client.subscribe([('AGVs/+/location', 0), ('AGVs/+/status', 0), ('AGVs/+/battery', 0)])
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
@@ -58,6 +65,10 @@ def on_message(client, userdata, msg):
                        '|','{:^11s}'.format(str(agv2.status)),\
                        '|','{:^10s}'.format(str(agv3.status)),'|')
 
+    print('| Battery    |','{:^11s}'.format(str(agv1.battery)),\
+                       '|','{:^11s}'.format(str(agv2.battery)),\
+                       '|','{:^10s}'.format(str(agv3.battery)),'|')
+    
     print('| Location X |','{:^11s}'.format(str(agv1.location[0])),\
                        '|','{:^11s}'.format(str(agv2.location[0])),\
                        '|','{:^10s}'.format(str(agv3.location[0])),'|')
