@@ -5,7 +5,7 @@ import datetime
 import time
 
 class AGV(object):
-    def __init__(self, location=(0.0,0.0,0.0), status=('OFF')):
+    def __init__(self, location=(0.0,0.0,0), status=('OFF')):
         self.battery  = 100
         self.location = location
         self.status   =   status
@@ -85,6 +85,7 @@ def on_message(client, userdata, msg):
 
 if __name__ == '__main__':
     broker_address = '192.168.1.115'
+    port = 1883
     agv1 = AGV()
     agv2 = AGV((100, 70, 1), 'ON')
     agv3 = AGV((-90, 15, 2), 'ON')    
@@ -95,10 +96,10 @@ if __name__ == '__main__':
         client.on_connect = on_connect
         client.on_message = on_message
 
-        client.connect(broker_address, 1883, 60)
+        client.connect(broker_address, port, 60)
         client.loop_forever()
     except KeyboardInterrupt:
-        client.disconnect
+        client.disconnect()
         conn_status = 'disconnected.'
         print('\nStatus:', Fore.BLACK + Back.RED + '{}'.format(conn_status))
         print(Style.RESET_ALL)
