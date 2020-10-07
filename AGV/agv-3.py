@@ -1,7 +1,9 @@
 import paho.mqtt.client as mqtt
 from os import system
+import multiprocessing
 import datetime
 import logging
+import random
 import time
 
 class AGV(mqtt.Client):
@@ -9,6 +11,7 @@ class AGV(mqtt.Client):
         mqtt.Client.__init__(self)
         self.battery   = 100
         self.location  = location
+        self.node_list = []
         self.status    = status
         self.emergency = 0
 
@@ -41,13 +44,24 @@ class AGV(mqtt.Client):
             pass
 
     def publish_to_topics(self):
-        try:
-            self.subscribe([('AGVs/AGV_3/node_list', 1),\
-                          ('AGVs/AGV_3/emergency', 1)])
-            # self.subscribe([('AGVs/+/node_list', 1),\
-            # ('AGVs/+/emergency', 1)]) # To test Authorization
-        except:
-            pass
+        while True:
+            try:
+                topic_list = ['AGVs/AGV_3/location', 'AGVs/AGV_3/status', 'AGVs/AGV_3/battery']
+                random_topic = random.choice(topic_list)
+                # random_value = 0
+
+                if random_topic == 'AGVs/AGV_3/location':
+                    random_value  = self.location 
+                elif random_topic == 'AGVs/AGV_3/status':
+                    random_value  = random.randchoice(['Online','Offline','Stopped','Manual']) 
+                elif random_topic == 'AGVs/AGV_3/battery':
+                    random_value  = random.randint(0, 100) 
+
+                self.publish(random_topic, random_value, qos=0)
+            except:
+                pass
+            print(self.node_list)    
+            time.sleep(3)
 
 def on_connect(client, userdata, flags, rc):
     agv_3.logger.info('CONNECTED TO BROKER.')
@@ -83,9 +97,10 @@ if __name__ == '__main__':
     
     try:
         agv_3.connect(broker_address, port)
-        agv_3.loop_forever()
-
+        publish_data = multiprocessing.Process(target=agv_3.publish_to_topics)
         # Start publishing on parallel so navigation processes can run separately:
+        publish_data.start()
+        agv_3.loop_forever() # Must be at the end of the loop due to its blocking properties
     except KeyboardInterrupt:
         agv_3.disconnect()
         agv_3.logger.info('DISCONNECTED FROM BROKER.')
