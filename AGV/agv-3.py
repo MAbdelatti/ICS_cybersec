@@ -6,7 +6,7 @@ import logging
 import random
 import time
 
-class AGV(mqtt.Client):
+class AGV(object):
     def __init__(self, location=(0.0,0.0,0), status=('ON')):
         mqtt.Client.__init__(self)
         self.battery   = 100
@@ -34,73 +34,86 @@ class AGV(mqtt.Client):
         # add ch to logger
         self.logger.addHandler(ch)
 
-    def subscribe_to_topics(self):
+    def subscribe_to_topics(self, client, broker_address, port):
         try:
-            self.subscribe([('AGVs/AGV_3/node_list', 1),\
+            client.connect(broker_address, port)
+            client.subscribe([('AGVs/AGV_3/node_list', 1),\
                           ('AGVs/AGV_3/emergency', 1)])
             # self.subscribe([('AGVs/+/node_list', 1),\
             # ('AGVs/+/emergency', 1)]) # To test Authorization
         except:
             pass
 
-    def publish_to_topics(self):
-        while True:
-            try:
-                topic_list = ['AGVs/AGV_3/location', 'AGVs/AGV_3/status', 'AGVs/AGV_3/battery']
-                random_topic = random.choice(topic_list)
-                # random_value = 0
+    def publish_to_topics(self, client, broker_address, port):
+        try:
+            topic_list = ['AGVs/AGV_3/location', 'AGVs/AGV_3/status', 'AGVs/AGV_3/battery']
+            random_topic = random.choice(topic_list)
 
-                if random_topic == 'AGVs/AGV_3/location':
-                    random_value  = self.location 
-                elif random_topic == 'AGVs/AGV_3/status':
-                    random_value  = random.randchoice(['Online','Offline','Stopped','Manual']) 
-                elif random_topic == 'AGVs/AGV_3/battery':
-                    random_value  = random.randint(0, 100) 
+            if random_topic == 'AGVs/AGV_3/location':
+                self.location = random.choice(self.node_list)
+                random_value  = self.location 
+            elif random_topic == 'AGVs/AGV_3/status':
+                random_value  = random.choice(['Online','Offline','Stopped','Manual']) 
+            elif random_topic == 'AGVs/AGV_3/battery':
+                random_value  = random.randint(0, 100) 
 
-                self.publish(random_topic, random_value, qos=0)
-            except:
-                pass
-            print(self.node_list)    
-            time.sleep(3)
+            client.publish(random_topic, str(random_value), qos=0)
+        except Exception as e:
+            print(e)
 
 def on_connect(client, userdata, flags, rc):
-    agv_3.logger.info('CONNECTED TO BROKER.')
-    agv_3.subscribe_to_topics()
-
+    userdata['myobject'].logger.info('CONNECTED TO BROKER.')
+    
 def on_subscribe(client, userdata, mid, granted_qos):
-    agv_3.logger.info('SUBSCRIBED SUCCESSFULLY')
+    userdata['myobject'].logger.info('SUBSCRIBED SUCCESSFULLY')
 
 def on_message(client, userdata, msg):
-    agv_3.logger.info('RECEIVED MESSAGE FROM '+ msg.topic)
+    userdata['myobject'].logger.info('RECEIVED MESSAGE FROM '+ msg.topic)
     received_top = msg.topic[11:]
 
     if received_top == 'node_list':
-        agv_3.node_list = eval(msg.payload.decode("utf-8"))
-        print(agv_3.node_list)
+        userdata['myobject'].node_list = eval(msg.payload.decode("utf-8"))
     elif received_top == 'emergency':
-        agv_3.emergency = eval(msg.payload.decode("utf-8"))
-        print(agv_3.emergency)
+        userdata['myobject'].emergency = eval(msg.payload.decode("utf-8"))
 
 def on_publish(client, userdata, mid):
-    agv_3.logger.info('DATA PUBLISHED SUCCESSFULLY')
+    userdata['myobject'].logger.info('DATA PUBLISHED SUCCESSFULLY')
+
+def on_disconnect(client, userdata, rc):
+    userdata['myobject'].logger.info('DISCONNECTED FROM BROKER.')
+    client.loop_stop()
 
 if __name__ == '__main__':
     broker_address = '192.168.1.115'
     port  = 1883
+
     agv_3 = AGV()
     agv_3.initiate_logger()
+
+    client_sub_userdata = {'myobject':agv_3}
+    client_pub_userdata = {'myobject':agv_3}
+    client_sub = mqtt.Client(userdata=client_sub_userdata)
+    client_pub = mqtt.Client(userdata=client_pub_userdata)
     
-    agv_3.on_connect   = on_connect
-    agv_3.on_subscribe = on_subscribe
-    agv_3.on_message = on_message
-    agv_3.on_publish = on_publish
+    client_sub.on_connect   = on_connect
+    client_pub.on_connect   = on_connect
+    client_sub.on_subscribe = on_subscribe
+    client_pub.on_subscribe = on_subscribe
+    client_sub.on_message   = on_message
+    client_pub.on_message   = on_message
+    client_sub.on_publish   = on_publish
+    client_pub.on_publish   = on_publish
     
     try:
-        agv_3.connect(broker_address, port)
-        publish_data = multiprocessing.Process(target=agv_3.publish_to_topics)
-        # Start publishing on parallel so navigation processes can run separately:
-        publish_data.start()
-        agv_3.loop_forever() # Must be at the end of the loop due to its blocking properties
+        agv_3.subscribe_to_topics(client_sub, broker_address, port)
+        client_pub.connect(broker_address, port)
+
+        while True:
+            agv_3.publish_to_topics(client_pub, broker_address, port)
+            client_sub.loop_start()
+            client_pub.loop_start()
+            time.sleep(3)
+
     except KeyboardInterrupt:
-        agv_3.disconnect()
-        agv_3.logger.info('DISCONNECTED FROM BROKER.')
+        client_sub.disconnect()
+        client_pub.disconnect()

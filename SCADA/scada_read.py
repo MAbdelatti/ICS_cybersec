@@ -10,10 +10,8 @@ class AGV(object):
         self.location = location
         self.status   =   status
 
-def assign_values(msg):
-    ID = msg.topic[9]
-    received_top = msg.topic[11:]
-
+def assign_values(msg, ID, received_top):
+    
     if ID == '1' and received_top == 'location':
         agv1.location = eval(msg.payload.decode("utf-8"))
     elif ID == '1' and received_top == 'status':
@@ -47,10 +45,13 @@ def on_connect(client, userdata, flags, rc):
     # Subscribing in on_connect() means that if we lose the connection and
     # reconnect then subscriptions will be renewed.
     client.subscribe([('AGVs/+/location', 0), ('AGVs/+/status', 0), ('AGVs/+/battery', 0)])
+    # client.subscribe([('AGVs/AGV_3/location', 0)])
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
-    assign_values(msg)
+    ID = msg.topic[9]
+    received_top = msg.topic[11:]
+    assign_values(msg, ID, received_top)
     system('clear')
     print(Fore.BLACK + Back.GREEN + '{:^100s}'.format('ICS REALTIME MONITORING SYSTEM -- version 1.0'))
     print(Style.RESET_ALL)
@@ -82,6 +83,8 @@ def on_message(client, userdata, msg):
                        '|','{:^10s}'.format(str(agv3.location[2])),'|')
     print('+============+=============+=============+============+')
 
+def on_subscribe(client, userdata, mid, granted_qos):
+    pass
 
 if __name__ == '__main__':
     broker_address = '192.168.1.115'
@@ -95,6 +98,7 @@ if __name__ == '__main__':
         client = mqtt.Client()
         client.on_connect = on_connect
         client.on_message = on_message
+        client.on_subscribe = on_subscribe
 
         client.connect(broker_address, port, 60)
         client.loop_forever()
