@@ -41,8 +41,8 @@ class AGV(object):
                           ('AGVs/AGV_3/emergency', 1)])
             # self.subscribe([('AGVs/+/node_list', 1),\
             # ('AGVs/+/emergency', 1)]) # To test Authorization
-        except:
-            pass
+        except Exception as e:
+            self.logger.warning(e)
 
     def publish_to_topics(self, client, broker_address, port):
         try:
@@ -59,7 +59,7 @@ class AGV(object):
 
             client.publish(random_topic, str(random_value), qos=0)
         except Exception as e:
-            print(e)
+            self.logger.warning(e)
 
 def on_connect(client, userdata, flags, rc):
     userdata['myobject'].logger.info('CONNECTED TO BROKER.')
