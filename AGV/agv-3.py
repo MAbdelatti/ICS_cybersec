@@ -1,6 +1,7 @@
 import paho.mqtt.client as mqtt
 from os import system
 import multiprocessing
+import keyring as kr
 import datetime
 import logging
 import random
@@ -11,7 +12,7 @@ class AGV(object):
         mqtt.Client.__init__(self)
         self.battery   = 100
         self.location  = location
-        self.node_list = []
+        self.node_list = [(1,1,1)]
         self.status    = status
         self.emergency = 0
 
@@ -62,7 +63,10 @@ class AGV(object):
             self.logger.warning(e)
 
 def on_connect(client, userdata, flags, rc):
-    userdata['myobject'].logger.info('CONNECTED TO BROKER.')
+    if rc == 0:
+        userdata['myobject'].logger.info('CONNECTED TO BROKER.')
+    elif rc == 5:
+        userdata['myobject'].logger.error('AUTHENTICATION FAILED.')
     
 def on_subscribe(client, userdata, mid, granted_qos):
     userdata['myobject'].logger.info('SUBSCRIBED SUCCESSFULLY')
@@ -86,6 +90,12 @@ def on_disconnect(client, userdata, rc):
 if __name__ == '__main__':
     broker_address = '192.168.1.115'
     port  = 1883
+    user = 'AGV3'
+    try:
+        passwd = kr.get_password('ICS', user)
+    except ValueError:
+        print('INCORRECT PASSWORD...EXITTING...')
+        exit()
 
     agv_3 = AGV()
     agv_3.initiate_logger()
@@ -103,6 +113,9 @@ if __name__ == '__main__':
     client_pub.on_message   = on_message
     client_sub.on_publish   = on_publish
     client_pub.on_publish   = on_publish
+
+    client_sub.username_pw_set(username=user, password=passwd)
+    client_pub.username_pw_set(username=user, password=passwd)
     
     try:
         agv_3.subscribe_to_topics(client_sub, broker_address, port)
