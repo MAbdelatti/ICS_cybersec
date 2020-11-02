@@ -38,8 +38,8 @@ class AGV(object):
     def subscribe_to_topics(self, client, broker_address, port):
         try:
             client.connect(broker_address, port)
-            client.subscribe([('AGVs/AGV_3/node_list', 1),\
-                          ('AGVs/AGV_3/emergency', 1)])
+            client.subscribe([('AGVs/AGV3/node_list', 1),\
+                          ('AGVs/AGV3/emergency', 1)])
             # self.subscribe([('AGVs/+/node_list', 1),\
             # ('AGVs/+/emergency', 1)]) # To test Authorization
         except Exception as e:
@@ -47,15 +47,15 @@ class AGV(object):
 
     def publish_to_topics(self, client, broker_address, port):
         try:
-            topic_list = ['AGVs/AGV_3/location', 'AGVs/AGV_3/status', 'AGVs/AGV_3/battery']
+            topic_list = ['AGVs/AGV3/location', 'AGVs/AGV3/status', 'AGVs/AGV3/battery']
             random_topic = random.choice(topic_list)
 
-            if random_topic == 'AGVs/AGV_3/location':
+            if random_topic == 'AGVs/AGV3/location':
                 self.location = random.choice(self.node_list)
                 random_value  = self.location 
-            elif random_topic == 'AGVs/AGV_3/status':
+            elif random_topic == 'AGVs/AGV3/status':
                 random_value  = random.choice(['Online','Offline','Stopped','Manual']) 
-            elif random_topic == 'AGVs/AGV_3/battery':
+            elif random_topic == 'AGVs/AGV3/battery':
                 random_value  = random.randint(0, 100) 
 
             client.publish(random_topic, str(random_value), qos=0)

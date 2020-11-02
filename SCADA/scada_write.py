@@ -77,23 +77,23 @@ if __name__ == '__main__':
             print(Style.RESET_ALL, '\n')
         elif response == 1:
             agv_no = validate_agv()
-            client.publish('AGVs/AGV_'+str(agv_no)+'/emergency', payload=1,\
+            client.publish('AGVs/AGV'+str(agv_no)+'/emergency', payload=1,\
                             qos=1, retain=False)
             # send an Emergency stop signal to the corresponding topic
         elif response == 2:
             agv_no = validate_agv()
-            client.publish('AGVs/AGV_'+str(agv_no)+'/emergency', payload=2,\
+            client.publish('AGVs/AGV'+str(agv_no)+'/emergency', payload=2,\
                             qos=1, retain=False)
             # send a Manual Override signal to the corresponding topic
         elif response == 3:
             agv_no = validate_agv()
-            client.publish('AGVs/AGV_'+str(agv_no)+'/emergency', payload=0,\
+            client.publish('AGVs/AGV'+str(agv_no)+'/emergency', payload=0,\
                             qos=1, retain=False)
             # clear the Manual Override from the corresponding topic
         elif response == 4:
             agv_no = validate_agv()
             node_list = validate_node_list()
-            res = client.publish('AGVs/AGV_'+str(agv_no)+'/node_list', payload=str(node_list),\
+            res = client.publish('AGVs/AGV'+str(agv_no)+'/node_list', payload=str(node_list),\
                             qos=1, retain=False)   # str used since Payload CANNOT be a list.             
         elif response == 5:
             client.disconnect()
