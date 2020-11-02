@@ -1,6 +1,7 @@
 import paho.mqtt.client as mqtt
 from colorama import Fore, Back, Style
 from os import system
+import keyring as kr
 import datetime
 import time
 
@@ -49,8 +50,16 @@ def validate_node_list(node_list=0):
 if __name__ == '__main__':
     broker_address = '192.168.1.115'
     port = 1883
+    user = 'SCADA'
+    try:
+        passwd = kr.get_password('ICS', user)
+    except ValueError:
+        print('INCORRECT PASSWORD...EXITTING...')
+        exit()
+
     client = mqtt.Client()
     client.on_publish = on_publish
+    client.username_pw_set(username=user, password=passwd)
     client.connect(broker_address, port)
     system('clear')
 

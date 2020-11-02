@@ -1,6 +1,7 @@
 import paho.mqtt.client as mqtt
 from colorama import Fore, Back, Style
 from os import system
+import keyring as kr
 import datetime
 import time
 
@@ -89,6 +90,13 @@ def on_subscribe(client, userdata, mid, granted_qos):
 if __name__ == '__main__':
     broker_address = '192.168.1.115'
     port = 1883
+    user = 'SCADA'
+    try:
+        passwd = kr.get_password('ICS', user)
+    except ValueError:
+        print('INCORRECT PASSWORD...EXITTING...')
+        exit()
+
     agv1 = AGV()
     agv2 = AGV((100, 70, 1), 'ON')
     agv3 = AGV((-90, 15, 2), 'ON')    
@@ -99,6 +107,8 @@ if __name__ == '__main__':
         client.on_connect = on_connect
         client.on_message = on_message
         client.on_subscribe = on_subscribe
+
+        client.username_pw_set(username=user, password=passwd)
 
         client.connect(broker_address, port, 60)
         client.loop_forever()
