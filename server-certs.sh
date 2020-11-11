@@ -28,3 +28,7 @@ mv *.crt $dir
 mv *.key $dir
 mv *.csr $dir
 mv *.srl $dir
+echo "Modify the port number to 8883 in /etc/mosquitto/mosquitto.conf file Default Listener section."
+sudo cp $dir/mqtt-server.key $dir/mqtt-server.crt /etc/mosquitto/certs/
+sudo cp $dir/mqtt-ca.crt /etc/mosquitto/ca_certificates/
+echo "Add the full path and file name in /etc/mosquitto/mosquitto.conf file in the following sections: cafile path/mqtt-ca.crt, certfile path/mqtt-server.crt, keyfile path/mqtt-server.key"
