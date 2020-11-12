@@ -1,5 +1,5 @@
 import paho.mqtt.client as mqtt
-from os import system
+from os import system, path
 import multiprocessing
 import keyring as kr
 import datetime
@@ -117,15 +117,18 @@ if __name__ == '__main__':
     client_sub.username_pw_set(username=user, password=passwd)
     client_pub.username_pw_set(username=user, password=passwd)
 
+    ca_path     = path.abspath(path.join(path.abspath(__file__), '..','..', 'server-certs'))
+    client_path = path.abspath(path.join(path.abspath(__file__), '..','..', 'client-certs'))
+
     client_sub.tls_set(\
-        ca_certs='../server-certs/mqtt-ca.crt',\
-        certfile='../client-certs/mqtt-client.crt',\
-        keyfile='../client-certs/mqtt-client.key')
+        ca_certs = path.abspath(path.join(ca_path,    'mqtt-ca.crt')),\
+        certfile = path.abspath(path.join(client_path,'mqtt-client.crt')),\
+        keyfile  = path.abspath(path.join(client_path,'mqtt-client.key')))
     
     client_pub.tls_set(\
-        ca_certs='../server-certs/mqtt-ca.crt',\
-        certfile='../client-certs/mqtt-client.crt',\
-        keyfile='../client-certs/mqtt-client.key')
+        ca_certs = path.abspath(path.join(ca_path,    'mqtt-ca.crt')),\
+        certfile = path.abspath(path.join(client_path,'mqtt-client.crt')),\
+        keyfile  = path.abspath(path.join(client_path,'mqtt-client.key')))
 
     try:
         agv_3.subscribe_to_topics(client_sub, broker, port)

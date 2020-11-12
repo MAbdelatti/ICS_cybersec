@@ -38,8 +38,8 @@ class AGV(object):
     def subscribe_to_topics(self, client, broker_address, port):
         try:
             client.connect(broker_address, port)
-            client.subscribe([('AGVs/AGV2/node_list', 1),\
-                          ('AGVs/AGV2/emergency', 1)])
+            client.subscribe([('AGVs/AGV1/node_list', 1),\
+                          ('AGVs/AGV1/emergency', 1)])
             # self.subscribe([('AGVs/+/node_list', 1),\
             # ('AGVs/+/emergency', 1)]) # To test Authorization
         except Exception as e:
@@ -47,15 +47,15 @@ class AGV(object):
 
     def publish_to_topics(self, client, broker_address, port):
         try:
-            topic_list = ['AGVs/AGV2/location', 'AGVs/AGV2/status', 'AGVs/AGV2/battery']
+            topic_list = ['AGVs/AGV1/location', 'AGVs/AGV1/status', 'AGVs/AGV1/battery']
             random_topic = random.choice(topic_list)
 
-            if random_topic == 'AGVs/AGV2/location':
+            if random_topic == 'AGVs/AGV1/location':
                 self.location = random.choice(self.node_list)
                 random_value  = self.location 
-            elif random_topic == 'AGVs/AGV2/status':
+            elif random_topic == 'AGVs/AGV1/status':
                 random_value  = random.choice(['Online','Offline','Stopped','Manual']) 
-            elif random_topic == 'AGVs/AGV2/battery':
+            elif random_topic == 'AGVs/AGV1/battery':
                 random_value  = random.randint(0, 100) 
 
             client.publish(random_topic, str(random_value), qos=0)
@@ -90,7 +90,7 @@ def on_disconnect(client, userdata, rc):
 if __name__ == '__main__':
     broker = 'broker.local'
     port  = 8883
-    user = 'AGV2'
+    user = 'AGV1'
     try:
         passwd = kr.get_password('ICS', user)
     except ValueError:
