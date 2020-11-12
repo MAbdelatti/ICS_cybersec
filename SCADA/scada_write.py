@@ -48,8 +48,8 @@ def validate_node_list(node_list=0):
     return node_list
 
 if __name__ == '__main__':
-    broker_address = '192.168.1.115'
-    port = 1883
+    broker = 'broker.local'
+    port = 8883
     user = 'SCADA'
     try:
         passwd = kr.get_password('ICS', user)
@@ -60,7 +60,12 @@ if __name__ == '__main__':
     client = mqtt.Client()
     client.on_publish = on_publish
     client.username_pw_set(username=user, password=passwd)
-    client.connect(broker_address, port)
+    client.tls_set(\
+            ca_certs='../server-certs/mqtt-ca.crt',\
+            certfile='../client-certs/mqtt-client.crt',\
+            keyfile ='../client-certs/mqtt-client.key')
+
+    client.connect(broker, port)
     system('clear')
 
     print(Fore.BLACK + Back.GREEN + \

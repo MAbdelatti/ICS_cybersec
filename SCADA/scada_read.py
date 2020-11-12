@@ -88,8 +88,8 @@ def on_subscribe(client, userdata, mid, granted_qos):
     pass
 
 if __name__ == '__main__':
-    broker_address = '192.168.1.115'
-    port = 1883
+    broker = 'broker.local'
+    port = 8883
     user = 'SCADA'
     try:
         passwd = kr.get_password('ICS', user)
@@ -109,8 +109,12 @@ if __name__ == '__main__':
         client.on_subscribe = on_subscribe
 
         client.username_pw_set(username=user, password=passwd)
+        client.tls_set(\
+                ca_certs='../server-certs/mqtt-ca.crt',\
+                certfile='../client-certs/mqtt-client.crt',\
+                keyfile ='../client-certs/mqtt-client.key')
 
-        client.connect(broker_address, port, 60)
+        client.connect(broker, port, 60)
         client.loop_forever()
     except KeyboardInterrupt:
         client.disconnect()

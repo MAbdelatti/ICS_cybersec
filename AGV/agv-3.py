@@ -88,8 +88,8 @@ def on_disconnect(client, userdata, rc):
     client.loop_stop()
 
 if __name__ == '__main__':
-    broker_address = '192.168.1.115'
-    port  = 1883
+    broker = 'broker.local'
+    port  = 8883
     user = 'AGV3'
     try:
         passwd = kr.get_password('ICS', user)
@@ -116,13 +116,23 @@ if __name__ == '__main__':
 
     client_sub.username_pw_set(username=user, password=passwd)
     client_pub.username_pw_set(username=user, password=passwd)
+
+    client_sub.tls_set(\
+        ca_certs='../server-certs/mqtt-ca.crt',\
+        certfile='../client-certs/mqtt-client.crt',\
+        keyfile='../client-certs/mqtt-client.key')
     
+    client_pub.tls_set(\
+        ca_certs='../server-certs/mqtt-ca.crt',\
+        certfile='../client-certs/mqtt-client.crt',\
+        keyfile='../client-certs/mqtt-client.key')
+
     try:
-        agv_3.subscribe_to_topics(client_sub, broker_address, port)
-        client_pub.connect(broker_address, port)
+        agv_3.subscribe_to_topics(client_sub, broker, port)
+        client_pub.connect(broker, port)
 
         while True:
-            agv_3.publish_to_topics(client_pub, broker_address, port)
+            agv_3.publish_to_topics(client_pub, broker, port)
             client_sub.loop_start()
             client_pub.loop_start()
             time.sleep(3)
